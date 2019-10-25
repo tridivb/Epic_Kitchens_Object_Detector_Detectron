@@ -16,6 +16,7 @@ Also make sure docker is installed and set up with proper access rights. Detectr
 
 Docker >= 19.0  
 Nvidia Graphics Drivers compatible with Cuda 9  
+
 The Epic Kitchens should be downloaded and the folder hierarchy should be in the following way:  
 
 ```
