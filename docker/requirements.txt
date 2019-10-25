@@ -1,0 +1,9 @@
+numpy>=1.13
+opencv-python>=3.2
+setuptools
+Cython
+mock
+scipy
+six
+future
+protobuf
