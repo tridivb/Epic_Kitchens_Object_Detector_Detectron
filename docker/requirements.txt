@@ -7,9 +7,3 @@ scipy
 six
 future
 protobuf
-parse
-tqdm
-ffmpeg
-moviepy
-matplotlib==2.1.2
-PyYAML==4.2b2
