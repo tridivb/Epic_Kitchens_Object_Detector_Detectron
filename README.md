@@ -14,9 +14,9 @@ Also make sure docker is installed and set up with proper access rights. Detectr
 
 ### Prerequisites
 
-Docker >= 19.0
-Nvidia Graphics Drivers compatible with Cuda 9
-The Epic Kitchens should be downloaded and the folder hierarchy should be in the following way:
+Docker >= 19.0  
+Nvidia Graphics Drivers compatible with Cuda 9  
+The Epic Kitchens should be downloaded and the folder hierarchy should be in the following way:  
 
 ```
 |---<path to epic kitchens>
@@ -73,9 +73,9 @@ If everything works, move on to setting up the parameters.
 
 Set the paths and parameters in the utils/settings.py file.
 
-Alternatively create a new file utils/local_settings.py, copy the contents
-of settings.py into it except the following lines and make the changes there. The modified paths should be automatically 
-included then.
+Alternatively create a new file utils/local_settings.py, copy the contents of settings.py into it 
+except the following lines and make the changes there. The modified paths should be automatically included then.
+
 ```
 try:
     from utils.local_settings import *
@@ -93,7 +93,7 @@ test/P01/P01_11
 train/P01/P01_10
 ```
 
-If you want to run the inference manually from the container, execute the launch.sh script, navigate to 
+Alternatively, if you want to run the inference manually from the container, execute the launch.sh script, navigate to 
 ./Epic_Kitchens_Feature_Extractor_Detectron directory and run the following command:
 
 ```
