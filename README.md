@@ -2,6 +2,8 @@
 
 Detect Objects in the Epic Kitchens dataset using Faster-RCNN as the backbone and the Detectron library 
 
+This branch is a WIP for Python3, Cuda 10 and Detectron2. For the old Detectron library and Python2 please move to the branch [python2](https://github.com/tridivb/Epic_Kitchens_Feature_Extractor_Detectron/tree/python2)
+
 ## Getting Started
 
 Clone the repo and set it up in your local drive.
