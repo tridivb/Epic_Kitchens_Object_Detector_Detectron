@@ -7,7 +7,7 @@
 
 source ../config/cfg.conf
 
-docker run --rm --gpus "device=1" \
+docker run --rm --gpus $gpus \
 	--name detectron \
     --workdir "/home/$USER/Epic_Kitchens_Feature_Extractor_Detectron" \
 	-v $code_repo:"/home/$USER/Epic_Kitchens_Feature_Extractor_Detectron" \

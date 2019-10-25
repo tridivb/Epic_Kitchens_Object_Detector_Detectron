@@ -2,8 +2,6 @@
 
 Detect Objects in the Epic Kitchens dataset using Faster-RCNN as the backbone and the Detectron library 
 
-This branch is a WIP for Python3, Cuda 10 and Detectron2. For the old Detectron library and Python2 please move to the branch [python2](https://github.com/tridivb/Epic_Kitchens_Feature_Extractor_Detectron/tree/python2)
-
 ## Getting Started
 
 Clone the repo and set it up in your local drive.
@@ -44,13 +42,14 @@ Navigate to the Epic_Kitchens_Feature_Extractor_Detectron directory
 
 ```
 git clone git@github.com:tridivb/Epic_Kitchens_Feature_Extractor_Detectron.git
-cd Epic_Kitchens_Feature_Extractor_Detectron/docker
+cd Epic_Kitchens_Feature_Extractor_Detectron/
 ```
 
-Download the pre-trained [weights](http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl). Then move it using the following commands:
+Download the pre-trained [weights](http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl):
 ```
-mkdir ./Epic_Kitchens_Feature_Extractor_Detectron/weights
-mv <path>/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl ./Epic_Kitchens_Feature_Extractor_Detectron/weights/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl
+mkdir ./weights
+cd weights
+wget http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl
 ```
 
 Setup the docker image
