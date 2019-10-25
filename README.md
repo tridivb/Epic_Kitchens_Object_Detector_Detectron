@@ -45,6 +45,9 @@ git clone git@github.com:tridivb/Epic_Kitchens_Feature_Extractor_Detectron.git
 cd Epic_Kitchens_Feature_Extractor_Detectron/docker
 ```
 
+Download the pre-trained [weights](http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl) and move it to 
+./Epic_Kitchens_Feature_Extractor_Detectron/docker directory
+
 Setup the docker image
 
 ```
@@ -113,7 +116,7 @@ The detections are saved in the following format for each video:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
