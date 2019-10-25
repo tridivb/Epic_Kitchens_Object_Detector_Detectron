@@ -166,7 +166,7 @@ def main(args):
     print("Done")
     print("----------------------------------------------------------")
 
-    # videos = [x for x in videos if "train" in x and os.path.split(x)[1] > "P01_17"]
+    videos = [x for x in videos if "train" in x and os.path.split(x)[1] > "P03_27"]
     in_fps = args.sample_fps
 
     print("Total no of videos to be processed: {}".format(len(videos)))

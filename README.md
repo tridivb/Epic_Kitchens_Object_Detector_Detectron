@@ -7,7 +7,7 @@ Detect Objects in the Epic Kitchens dataset using Faster-RCNN as the backbone an
 Clone the repo and set it up in your local drive.
 
 ```
-git clone git@github.com:tridivb/Object_Feature_Extractor_with_Detectron.git
+git clone git@github.com:tridivb/Epic_Kitchens_Feature_Extractor_Detectron.git
 ```
 
 Also make sure docker is installed and set up with proper access rights. Detectron will be built inside the docker container.
@@ -45,8 +45,11 @@ git clone git@github.com:tridivb/Epic_Kitchens_Feature_Extractor_Detectron.git
 cd Epic_Kitchens_Feature_Extractor_Detectron/docker
 ```
 
-Download the pre-trained [weights](http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl) and move it to 
-./Epic_Kitchens_Feature_Extractor_Detectron/docker directory
+Download the pre-trained [weights](http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl). Then move it using the following commands:
+```
+mkdir ./Epic_Kitchens_Feature_Extractor_Detectron/weights
+mv <path>/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl ./Epic_Kitchens_Feature_Extractor_Detectron/weights/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl
+```
 
 Setup the docker image
 

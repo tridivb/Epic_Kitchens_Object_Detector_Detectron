@@ -66,4 +66,4 @@ RUN adduser --disabled-password --gecos "" --uid ${UID} ${USER}
 USER ${UID}
 WORKDIR /home/${USER}
 ENV HOME /home/${USER}
-RUN mkdir ./epic_kitchens ./Object_Feature_Extractor_with_Detectron
+RUN mkdir ./epic_kitchens ./Epic_Kitchens_Feature_Extractor_Detectron
