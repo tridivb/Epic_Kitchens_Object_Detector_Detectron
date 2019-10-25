@@ -44,13 +44,14 @@ Navigate to the Epic_Kitchens_Feature_Extractor_Detectron directory
 
 ```
 git clone git@github.com:tridivb/Epic_Kitchens_Feature_Extractor_Detectron.git
-cd Epic_Kitchens_Feature_Extractor_Detectron/docker
+cd Epic_Kitchens_Feature_Extractor_Detectron/
 ```
 
-Download the pre-trained [weights](http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl). Then move it using the following commands:
+Download the pre-trained [weights](http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl):
 ```
-mkdir ./Epic_Kitchens_Feature_Extractor_Detectron/weights
-mv <path>/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl ./Epic_Kitchens_Feature_Extractor_Detectron/weights/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl
+mkdir ./weights
+cd weights
+wget http://iplab.dmi.unict.it/rulstm/downloads/ek18-2gpu-e2e-faster-rcnn-R-101-FPN_1x.pkl
 ```
 
 Setup the docker image
