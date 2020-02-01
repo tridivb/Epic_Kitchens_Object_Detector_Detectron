@@ -107,3 +107,4 @@ venv.bak/
 *.pkl
 ./utils/local_settings.py
 .vscode/
+output/
