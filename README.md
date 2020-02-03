@@ -1,6 +1,6 @@
 # Epic Kitchens Object Feature Extractor with Detectron
 
-WIP for Detectron2 and Python3. For the previous python2 working version, refer to the [python2][https://github.com/tridivb/Epic_Kitchens_Feature_Extractor_Detectron/tree/python2] branch.
+WIP for Detectron2 and Python3. For the previous python2 working version, refer to the [python2](https://github.com/tridivb/Epic_Kitchens_Feature_Extractor_Detectron/tree/python2) branch.
 
 Detect Objects in the Epic Kitchens dataset using Faster-RCNN as the backbone and the Detectron library.
 
@@ -17,4 +17,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-1. [Detectron2][https://github.com/facebookresearch/detectron2]
+1. [Detectron2](https://github.com/facebookresearch/detectron2)

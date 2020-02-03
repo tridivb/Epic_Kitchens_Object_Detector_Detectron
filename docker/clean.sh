@@ -9,4 +9,4 @@
 docker rm $(docker ps -a -q)
 
 # Remove image
-docker rmi detectron:py2-caffe2-cuda9
+docker rmi detectron2:py3-cuda10.1

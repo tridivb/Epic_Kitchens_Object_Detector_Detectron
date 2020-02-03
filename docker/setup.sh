@@ -6,9 +6,9 @@
 ########################################################
 
 # Check if the image already exists
-if [ "$(docker images -q detectron:py2-caffe2-cuda9 | wc -l)" ] >0; then
+if [ "$(docker images -q detectron2:py3-cuda10.1 | wc -l)" ] >0; then
     echo "Image already exists. Image will be rebuilt in case of any changes."
-    image_id=$(docker images -q detectron:py2-caffe2-cuda9)
+    image_id=$(docker images -q detectron2:py3-cuda10.1)
 else
     image_id=0
 fi
@@ -17,7 +17,7 @@ fi
 echo "Building docker image..."
 docker build --build-arg USER=$USER \
     --build-arg UID=$UID \
-    -t detectron:py2-caffe2-cuda9 \
+    -t detectron2:py3-cuda10.1 \
     .
 
 # Remove dangling images
