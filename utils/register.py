@@ -12,11 +12,11 @@ from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.utils.visualizer import Visualizer
 
 
-def get_epic_dicts(root_dir, annotation_file, d):
-    if d == "train":
-        annotations = pd.read_csv(annotation_file).sort_values(["video_id", "frame"])[0:200]
-    elif d == "val":
-        annotations = pd.read_csv(annotation_file).sort_values(["video_id", "frame"])[201:250]
+def get_epic_dicts(root_dir, annotation_file):
+    """
+    Helper function to create dictionary of metadata for Object Annotations of Epic Kitchens dataset
+    """
+    annotations = pd.read_csv(annotation_file).sort_values(["video_id", "frame"])[0:100]
 
     dataset_dicts = []
     annotations.bounding_boxes = annotations.bounding_boxes.apply(literal_eval)
@@ -56,33 +56,37 @@ def get_epic_dicts(root_dir, annotation_file, d):
 
 
 def register_dataset(root_dir, ann_dir):
-    
+    """
+    Helper function to register catalogue for Epic Kitchens Dataset in Detectron2 library
+    """
     noun_classes = pd.read_csv(
         os.path.join(ann_dir, "EPIC_noun_classes.csv")
     ).sort_values("noun_id")
     noun_classes = noun_classes.class_key.to_list()
 
     print("Metadata being created...")
-    for d in ["train", "val"]:
-        img_root = os.path.join(root_dir, "train")
-        # if d == "train":
-        ann_file = os.path.join(ann_dir, "EPIC_train_object_labels.csv")
+    for d in ["train"]:
+        img_root = os.path.join(root_dir, d)
+        if d == "train":
+            ann_file = os.path.join(ann_dir, "EPIC_train_object_labels.csv")
         DatasetCatalog.register(
-            "epic_kitchens_" + d, lambda d=d: get_epic_dicts(img_root, ann_file, d)
+            "epic_kitchens_" + d, lambda d=d: get_epic_dicts(img_root, ann_file)
         )
         MetadataCatalog.get("epic_kitchens_" + d).set(thing_classes=noun_classes)
     print("Done")
     print("----------------------------------------------------------")
-    
+
 
 def visualize(root_dir, ann_dir):
+    """
+    Helper function to visualize samples from registered Epic Kitchens dataset in Detectron2 library
+    """
     epic_kitchens_metadata = MetadataCatalog.get("epic_kitchens_train")
 
     print("Dictionary creation in progress...")
     dataset_dicts = get_epic_dicts(
         os.path.join(root_dir, "train"),
         os.path.join(ann_dir, "EPIC_train_object_labels.csv"),
-        "val"
     )
     print("Done")
     print("----------------------------------------------------------")

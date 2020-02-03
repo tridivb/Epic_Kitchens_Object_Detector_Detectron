@@ -7,9 +7,10 @@ Detect Objects in the Epic Kitchens dataset using Faster-RCNN as the backbone an
 Once the updates are up, the python2 version will be deprecated.
 
 ## TODO
-1. Implement trainer and tester with detectron2 and python3
-2. Provide conda environment file
-3. Modify docker scripts to accomodate updated versions of python and detectron
+1. Create evaluator for Epic Kitchens or test with Coco Evaluator
+2. Implement tester/inference script with detectron2 and python3
+3. Provide conda environment file or requirements file to setup python environment
+4. Modify docker scripts to accomodate updated versions of python and detectron (Currently not working)
 
 ## License
 

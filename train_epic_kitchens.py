@@ -29,13 +29,8 @@ from detectron2.data import (
 )
 from detectron2.engine import default_argument_parser, default_setup, launch
 from detectron2.evaluation import (
-    CityscapesEvaluator,
     COCOEvaluator,
-    COCOPanopticEvaluator,
     DatasetEvaluators,
-    LVISEvaluator,
-    PascalVOCDetectionEvaluator,
-    SemSegEvaluator,
     inference_on_dataset,
     print_csv_format,
 )
@@ -63,9 +58,9 @@ def get_evaluator(cfg, dataset_name, output_folder=None):
     if output_folder is None:
         output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
     evaluator_list = []
-    evaluator_type = MetadataCatalog.get(dataset_name).evaluator_type    
+    evaluator_type = MetadataCatalog.get(dataset_name).evaluator_type
     evaluator_list.append(COCOEvaluator(dataset_name, cfg, True, output_folder))
-    
+
     if len(evaluator_list) == 0:
         raise NotImplementedError(
             "no Evaluator for the dataset {} with the type {}".format(
@@ -209,15 +204,18 @@ def main(args):
         )
 
     do_train(cfg, model)
-    return do_test(cfg, model)
+    # return do_test(cfg, model)
 
 
 if __name__ == "__main__":
     args = default_argument_parser().parse_args()
+    num_gpus = torch.cuda.device_count()
+    if num_gpus == 0:
+        raise Exception("No GPU found. The model is not implemented without GPU support.")
     print("Command Line Args:", args)
     launch(
         main,
-        args.num_gpus,
+        num_gpus,
         num_machines=args.num_machines,
         machine_rank=args.machine_rank,
         dist_url=args.dist_url,
