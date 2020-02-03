@@ -1,0 +1,15 @@
+numpy
+matplotlib
+ninja
+pyyaml
+mkl
+mkl-include
+setuptools
+cmake
+cffi
+typing
+cython
+opencv-python
+pandas
+torch
+torchvision

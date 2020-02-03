@@ -16,7 +16,7 @@ def get_epic_dicts(root_dir, annotation_file):
     """
     Helper function to create dictionary of metadata for Object Annotations of Epic Kitchens dataset
     """
-    annotations = pd.read_csv(annotation_file).sort_values(["video_id", "frame"])[0:100]
+    annotations = pd.read_csv(annotation_file).sort_values(["video_id", "frame"])
 
     dataset_dicts = []
     annotations.bounding_boxes = annotations.bounding_boxes.apply(literal_eval)
