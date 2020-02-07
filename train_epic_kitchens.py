@@ -184,10 +184,7 @@ def setup(args):
 def main(args):
     cfg = setup(args)
 
-    register_dataset(
-        "/media/data/tridiv/epic_kitchens/EPIC_KITCHENS_2018/object_detection_images",
-        "/media/data/tridiv/epic_kitchens/annotations",
-    )
+    register_dataset(args.root_dir, args.ann_dir)
 
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
@@ -208,10 +205,27 @@ def main(args):
 
 
 if __name__ == "__main__":
-    args = default_argument_parser().parse_args()
+    parser = default_argument_parser()
+    parser.add_argument(
+        "--root-dir",
+        dest="root_dir",
+        required=True,
+        default="",
+        help="path to image files",
+    )
+    parser.add_argument(
+        "--ann-dir",
+        dest="ann_dir",
+        required=True,
+        default="",
+        help="path to image files",
+    )
+    args = parser.parse_args()
     num_gpus = torch.cuda.device_count()
     if num_gpus == 0:
-        raise Exception("No GPU found. The model is not implemented without GPU support.")
+        raise Exception(
+            "No GPU found. The model is not implemented without GPU support."
+        )
     print("Command Line Args:", args)
     launch(
         main,

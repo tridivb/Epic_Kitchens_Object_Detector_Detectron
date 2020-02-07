@@ -22,23 +22,20 @@ def get_epic_dicts(root_dir, annotation_file):
     annotations.bounding_boxes = annotations.bounding_boxes.apply(literal_eval)
     for idx, row in annotations.iterrows():
         record = {}
-        if len(row.bounding_boxes) == 0:
-            continue
-
         filename = os.path.join(
             row.participant_id, row.video_id, "{:010d}.jpg".format(row.frame)
         )
         filepath = os.path.join(root_dir, filename)
-        try:
+        if os.path.exists(filepath):
             height, width = cv2.imread(filepath).shape[:2]
-        except Exception as e:
-            print(idx, row)
-            raise Exception("Problem loading file {} with error {}".format(filepath, e))
-
+            record["height"] = height
+            record["width"] = width
+        else:
+            record["height"] = 0
+            record["width"] = 0
         record["file_name"] = filepath
         record["image_id"] = idx
-        record["height"] = height
-        record["width"] = width
+        
 
         annotations = []
         for bbox in row.bounding_boxes:
@@ -73,8 +70,12 @@ def register_dataset(root_dir, ann_dir):
             "epic_kitchens_" + d, lambda d=d: get_epic_dicts(img_root, ann_file)
         )
         MetadataCatalog.get("epic_kitchens_" + d).set(thing_classes=noun_classes)
+        MetadataCatalog.get("epic_kitchens_" + d).set(evaluator_type="coco")
     print("Done")
     print("----------------------------------------------------------")
+
+    metadata = MetadataCatalog.get("epic_kitchens_train")
+    return metadata
 
 
 def visualize(root_dir, ann_dir):

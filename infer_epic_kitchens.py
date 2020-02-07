@@ -15,204 +15,143 @@
 # limitations under the License.
 ##############################################################################
 
-"""Perform inference on all the frames of a video
+"""Perform inference on frames
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-from collections import defaultdict
-import argparse
-import cv2  # NOQA (Must import before importing caffe2 due to bug in cv2)
-import glob
 import logging
 import os
-import sys
-import time
-import numpy as np
-from moviepy.video.io.VideoFileClip import VideoFileClip
+import torch
+import cv2
+import json
+import pandas as pd
 from tqdm import tqdm
-from parse import parse
+from collections import OrderedDict
+from torch.nn.parallel import DistributedDataParallel
 
-from caffe2.python import core
-from caffe2.python import workspace
+import detectron2.utils.comm as comm
+from detectron2.config import get_cfg
+from detectron2.engine import (
+    default_argument_parser,
+    default_setup,
+    launch,
+    DefaultPredictor,
+)
+from detectron2.modeling import build_model
+from detectron2.solver import build_lr_scheduler, build_optimizer
 
-from detectron.core.config import assert_and_infer_cfg
-from detectron.core.config import cfg
-from detectron.core.config import merge_cfg_from_file
-from detectron.utils.io import cache_url
-from detectron.utils.logging import setup_logging
-from detectron.utils.timer import Timer
-import detectron.core.test_engine as infer_engine
-import detectron.datasets.dummy_datasets as dummy_datasets
-import detectron.utils.c2 as c2_utils
-import detectron.utils.vis as vis_utils
-
-from utils.settings import config
-
-c2_utils.import_detectron_ops()
-
-# OpenCL may be enabled by default in OpenCV3; disable it because it's not
-# thread safe and causes unwanted GPU memory allocations.
-cv2.ocl.setUseOpenCL(False)
+logger = logging.getLogger("detectron2")
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="End-to-end inference")
-    parser.add_argument(
-        "--cfg",
-        dest="cfg",
-        help="cfg model file (/path/to/model_config.yaml)",
-        default=config.cfg_file,
-        type=str,
-    )
-    parser.add_argument(
-        "--wts",
-        dest="weights",
-        help="weights model file (/path/to/model_weights.pkl)",
-        default=config.weights,
-        type=str,
-    )
-    parser.add_argument(
-        "--top_predictions",
-        dest="top_predictions",
-        help="Number of predictions to store",
-        default=100,
-        type=int,
-    )
-    parser.add_argument(
-        "--video_root",
-        dest="video_root",
-        help="path_to_video_root",
-        default=config.video_root,
-        type=str,
-    )
-    parser.add_argument(
-        "--video_list",
-        dest="video_list",
-        help="path_to_list_of_videos",
-        default=config.video_list,
-        type=str,
-    )
-    parser.add_argument(
-        "--sample_fps",
-        dest="sample_fps",
-        help="fps_value_to_sample_videos",
-        default=config.sample_fps,
-        type=int,
-    )
-    parser.add_argument(
-        "--out_path",
-        dest="out_path",
-        help="path_to_save_detections",
-        default=config.out_path,
-        type=str,
-    )
-
-    return parser.parse_args()
-
-
-def format_dets(boxes):
+def setup(args):
     """
-        Helper function to format the detections as N*1030 where,
-        N = no of detections in a frame
-        Column 1 = object index
-        Columns 2-5 = bounding box coordinates
-        Column 6 = Probability score
-        Columns 7-1030 = Extracted Feature from Faster-RCNN right before the final classification layer
-        Args:
-            boxes - Extracted bounding box coordinates, probability score and object features for a frame
+    Create configs and perform basic setups.
     """
-    all_boxes = []
-    for index, box in enumerate(boxes):
-        if len(box) > 0:
-            box = np.array(box)
-            item_index = np.ones((len(box), 1)) * index - 1
-            box = np.hstack([item_index, box])
-            all_boxes.append(box)
-    if len(all_boxes) > 0:
-        all_boxes = np.concatenate(all_boxes)
-    else:
-        all_boxes = np.zeros((0, 1030))
-    return all_boxes
+    cfg = get_cfg()
+    cfg.merge_from_file(args.config_file)
+    cfg.merge_from_list(args.opts)
+    cfg.freeze()
+    default_setup(cfg, args)
+    return cfg
+
+
+def do_infer(cfg, args):
+    predictor = DefaultPredictor(cfg)
+    file_list = [
+        "EPIC_test_s1_object_video_list.csv",
+        "EPIC_test_s2_object_video_list.csv",
+    ]
+    # TODO Implement batch processing
+    for ann_file in file_list:
+        logger.info("Reading video list from {}".format(ann_file))
+        df = pd.read_csv(os.path.join(args.ann_dir, ann_file))
+        results = OrderedDict()
+        results["version"] = 0.1
+        results["challenge"] = "object_detection"
+        logger.info("Number of videos: {}".format(df.shape[0]))
+        detections = []
+        for _, row in df.iterrows():
+            p_id = row.participant_id
+            vid_id = row.video_id
+            logger.info("Processing video {}...".format(vid_id))
+            vid_path = os.path.join(args.root_dir, p_id, vid_id)
+            for file in tqdm(os.listdir(vid_path)):
+                if file.endswith("jpg"):
+                    img = cv2.imread(os.path.join(vid_path, file))
+                    outputs = predictor(img)
+                    height, width = img.shape[0:2]
+                    bboxes = outputs["instances"].pred_boxes
+                    bboxes.scale(1 / width, 1 / height)
+                    scores = outputs["instances"].scores
+                    pred_classes = outputs["instances"].pred_classes
+                    assert (
+                        len(bboxes) == len(scores) == len(pred_classes) >= 300
+                    ), "Number of detected instances do not match or is less than 300"
+                    for idx in range(300):
+                        det_dict = OrderedDict()
+                        det_dict["video_id"] = vid_id
+                        det_dict["frame"] = int(file.split(".")[0])
+                        det_dict["category_id"] = int(pred_classes[idx])
+                        bbox = bboxes[idx].tensor[0].tolist()
+                        bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
+                        bbox = [round(c, 5) for c in bbox]
+                        det_dict["bbox"] = bbox
+                        det_dict["score"] = float(scores[idx])
+                        detections.append(det_dict)
+            logger.info("Done.")
+            logger.info("----------------------------------------------------------")
+        results["results"] = detections
+        if "s1" in ann_file:
+            with open(os.path.join(cfg.OUTPUT_DIR, "seen.json"), "w") as f:
+                json.dump(results, f, indent=4)
+        elif "s2" in ann_file:
+            with open(os.path.join(cfg.OUTPUT_DIR, "unseen.json"), "w") as f:
+                json.dump(results, f, indent=4)
 
 
 def main(args):
-    logger = logging.getLogger(__name__)
+    cfg = setup(args)
 
-    merge_cfg_from_file(args.cfg)
-    cfg.NUM_GPUS = 1
-    args.weights = cache_url(args.weights, cfg.DOWNLOAD_CACHE)
-    assert_and_infer_cfg(cache_urls=False)
+    model = build_model(cfg)
+    logger.info("Model:\n{}".format(model))
 
-    assert not cfg.MODEL.RPN_ONLY, "RPN models are not supported"
-    assert (
-        not cfg.TEST.PRECOMPUTED_PROPOSALS
-    ), "Models that require precomputed proposals are not supported"
+    # TODO Implement multi gpu processing
+    # distributed = comm.get_world_size() > 1
+    # if distributed:
+    #     model = DistributedDataParallel(
+    #         model, device_ids=[comm.get_local_rank()], broadcast_buffers=False
+    #     )
 
-    model = infer_engine.initialize_model_from_cfg(args.weights)
-    dummy_coco_dataset = dummy_datasets.get_coco_dataset()
-
-    videos_root = args.video_root
-    videos_list_file = args.video_list
-
-    out_path = args.out_path
-
-    print("Loading Video List ...")
-    with open(videos_list_file) as f:
-        videos = [x.strip() for x in f.readlines() if len(x.strip()) > 0]
-    print("Done")
-    print("----------------------------------------------------------")
-
-    videos = [x for x in videos if "train" in x and os.path.split(x)[1] > "P03_27"]
-    in_fps = args.sample_fps
-
-    print("Total no of videos to be processed: {}".format(len(videos)))
-    for v in videos:
-
-        vid_path = os.path.join(videos_root, v + ".MP4")
-        print("Processing {} at {} fps...".format(os.path.split(v)[1], in_fps))
-
-        detections_path = os.path.join(out_path, os.path.split(v)[0])
-        detections_file = os.path.join(
-            detections_path, os.path.split(v)[1] + "_detections.npy"
-        )
-
-        if os.path.isfile(detections_file):
-            logger.info(
-                "{} already processed. The previous detections will be overwritten".format(
-                    vid_path
-                )
-            )
-            # continue
-
-        if not os.path.exists(detections_path):
-            os.makedirs(detections_path)
-
-        vid = VideoFileClip(vid_path, audio=False, fps_source="fps")
-
-        all_detections = []
-
-        t = time.time()
-        for _, in_frame in tqdm(vid.iter_frames(fps=in_fps, with_times=True)):
-            timers = defaultdict(Timer)
-
-            with c2_utils.NamedCudaScope(0):
-                cls_boxes, cls_segms, cls_keyps = infer_engine.im_detect_all(
-                    model, in_frame, None, timers=timers
-                )
-            all_detections.append(format_dets(cls_boxes))
-
-        logger.info("Inference time: {:.3f}s".format(time.time() - t))
-        np.save(detections_file, all_detections)
-        print("Done")
-        print("----------------------------------------------------------")
+    do_infer(cfg, args)
 
 
 if __name__ == "__main__":
-    workspace.GlobalInit(["caffe2", "--caffe2_log_level=0"])
-    setup_logging(__name__)
-    args = parse_args()
-    main(args)
+    parser = default_argument_parser()
+    parser.add_argument(
+        "--root-dir",
+        dest="root_dir",
+        required=True,
+        default="",
+        help="path to image files",
+    )
+    parser.add_argument(
+        "--ann-dir",
+        dest="ann_dir",
+        required=True,
+        default="",
+        help="path to image files",
+    )
+    args = parser.parse_args()
+    num_gpus = torch.cuda.device_count()
+    if num_gpus == 0:
+        raise Exception(
+            "No GPU found. The model is not implemented without GPU support."
+        )
+    print("Command Line Args:", args)
+    launch(
+        main,
+        num_gpus,
+        num_machines=args.num_machines,
+        machine_rank=args.machine_rank,
+        dist_url=args.dist_url,
+        args=(args,),
+    )
