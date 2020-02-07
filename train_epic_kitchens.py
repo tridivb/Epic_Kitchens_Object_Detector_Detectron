@@ -206,12 +206,26 @@ def main(args):
 
 if __name__ == "__main__":
     parser = default_argument_parser()
-    parser.add_argument("--root-dir", dest="root_dir", required=True, default="", help="path to image files")
-    parser.add_argument("--ann-dir", dest="ann_dir", required=True, default="", help="path to image files")
+    parser.add_argument(
+        "--root-dir",
+        dest="root_dir",
+        required=True,
+        default="",
+        help="path to image files",
+    )
+    parser.add_argument(
+        "--ann-dir",
+        dest="ann_dir",
+        required=True,
+        default="",
+        help="path to image files",
+    )
     args = parser.parse_args()
     num_gpus = torch.cuda.device_count()
     if num_gpus == 0:
-        raise Exception("No GPU found. The model is not implemented without GPU support.")
+        raise Exception(
+            "No GPU found. The model is not implemented without GPU support."
+        )
     print("Command Line Args:", args)
     launch(
         main,

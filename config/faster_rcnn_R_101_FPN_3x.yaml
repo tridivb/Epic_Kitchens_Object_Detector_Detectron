@@ -24,29 +24,38 @@ MODEL:
     IN_FEATURES: ["p2", "p3", "p4", "p5"]
     NUM_CLASSES: 352
     BATCH_SIZE_PER_IMAGE: 512
+    SCORE_THRESH_TEST: 0.0
   ROI_BOX_HEAD:
     NAME: "FastRCNNConvFCHead"
     NUM_FC: 2
     POOLER_RESOLUTION: 7
-  WEIGHTS: "detectron2://COCO-Detection/faster_rcnn_R_101_FPN_3x/137851257/model_final_f6e8b1.pkl"
+  # WEIGHTS: "detectron2://COCO-Detection/faster_rcnn_R_101_FPN_3x/137851257/model_final_f6e8b1.pkl"
+  WEIGHTS: "/media/data/tridiv/epic/tridiv/epic/obj_log/model_0099847.pth"
   MASK_ON: False
 DATASETS:
   TRAIN: ("epic_kitchens_train",)
-  TEST: ()
+  TEST: ("epic_kitchens_train",)
 DATALOADER:
   NUM_WORKERS: 8
 SOLVER:
-  IMS_PER_BATCH: 12
+  # Calculate no of iterations based on this batch size
+  IMS_PER_BATCH: 6
   BASE_LR: 0.005
   GAMMA: 0.1
-  # (0, 20, 30, 40) epochs approx
-  STEPS: (0, 499240, 748860, 998480)
-  MAX_ITER: 1248100
+  # (0, 2.25, 3.03) epochs approx
+  STEPS: (0, 112329, 151269)
+  # 3.37 epochs approx
+  MAX_ITER: 168243
   WEIGHT_DECAY: 0.0001
-  # Set this to save checkpoint every 5th epoch (approx)
-  CHECKPOINT_PERIOD: 124810
+  # Set this to save checkpoint every epoch (approx)
+  CHECKPOINT_PERIOD: 49924
 INPUT:
   MIN_SIZE_TRAIN: (800,)
   MAX_SIZE_TRAIN: 1333
+  MIN_SIZE_TEST: 800
+  MAX_SIZE_TEST: 1333
+TEST:
+  DETECTIONS_PER_IMAGE: 300
 VERSION: 2
 OUTPUT_DIR: "/media/data/tridiv/epic/obj_log"
+CUDNN_BENCHMARK: True
