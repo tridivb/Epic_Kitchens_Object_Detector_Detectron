@@ -121,10 +121,10 @@ def do_train(cfg, model, resume=False):
 
     # compared to "train_net.py", we do not support accurate timing and
     # precise BN here, because they are not trivial to implement
-    print("Dataset creation in progress...")
+    logger.info("Dataset creation in progress...")
     data_loader = build_detection_train_loader(cfg)
-    print("Done")
-    print("----------------------------------------------------------")
+    logger.info("Done")
+    logger.info("----------------------------------------------------------")
     logger.info("Starting training from iteration {}".format(start_iter))
     with EventStorage(start_iter) as storage:
         for data, iteration in zip(data_loader, range(start_iter, max_iter)):
