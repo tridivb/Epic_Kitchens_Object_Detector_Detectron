@@ -13,3 +13,4 @@ opencv-python
 pandas
 torch
 torchvision
+joblib
