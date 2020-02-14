@@ -73,7 +73,7 @@ def get_epic_dicts(root_dir, annotation_file, dict_file=None):
     return dataset_dicts
 
 
-def register_dataset(root_dir, ann_dir):
+def register_dataset(root_dir, ann_dir, read_cache=False):
     """
     Helper function to register catalogue for Epic Kitchens Dataset in Detectron2 library
     """
@@ -88,7 +88,7 @@ def register_dataset(root_dir, ann_dir):
         if d == "train":
             ann_file = os.path.join(ann_dir, "EPIC_train_object_labels.csv")
         metadata_file = ann_file.split(".")[0] + "_metadata.pkl"
-        if os.path.exists(metadata_file):
+        if read_cache and os.path.exists(metadata_file):
             print(f"Metadata file found. Loading metadata from {metadata_file}")
             DatasetCatalog.register(
                 "epic_kitchens_" + d,
