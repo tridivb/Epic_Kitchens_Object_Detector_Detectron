@@ -20,7 +20,7 @@ def get_epic_dicts(root_dir, annotation_file, dict_file=None):
         with open(dict_file, "rb") as f:
             dataset_dicts = pickle.load(f)
     else:
-        annotations = pd.read_csv(annotation_file).sort_values(["video_id", "frame"])[0:100]
+        annotations = pd.read_csv(annotation_file).sort_values(["video_id", "frame"])
 
         dataset_dicts = []
         annotations.bounding_boxes = annotations.bounding_boxes.apply(literal_eval)
