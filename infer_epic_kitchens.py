@@ -65,7 +65,7 @@ def do_infer(cfg, args):
         logger.info("Reading video list from {}".format(ann_file))
         df = pd.read_csv(os.path.join(args.ann_dir, ann_file))
         results = OrderedDict()
-        results["version"] = 0.1
+        results["version"] = "0.1"
         results["challenge"] = "object_detection"
         logger.info("Number of videos: {}".format(df.shape[0]))
         detections = []
@@ -74,26 +74,55 @@ def do_infer(cfg, args):
             vid_id = row.video_id
             logger.info("Processing video {}...".format(vid_id))
             vid_path = os.path.join(args.root_dir, p_id, vid_id)
-            for file in tqdm(os.listdir(vid_path)):
+            for file in tqdm(sorted(os.listdir(vid_path))):
                 if file.endswith("jpg"):
                     img = cv2.imread(os.path.join(vid_path, file))
                     outputs = predictor(img)
                     height, width = img.shape[0:2]
+                    shift_y = round(1.0 / height, 5)
+                    shift_x = round(1.0 / width, 5)
                     bboxes = outputs["instances"].pred_boxes
                     bboxes.scale(1 / width, 1 / height)
                     scores = outputs["instances"].scores
                     pred_classes = outputs["instances"].pred_classes
                     assert (
-                        len(bboxes) == len(scores) == len(pred_classes) >= 300
-                    ), "Number of detected instances do not match or is less than 300"
-                    for idx in range(300):
+                        len(bboxes) == len(scores) == len(pred_classes) >= cfg.TEST.DETECTIONS_PER_IMAGE
+                    ), f"Number of detected instances do not match or is less than {cfg.TEST.DETECTIONS_PER_IMAGE}"
+                    for idx in range(cfg.TEST.DETECTIONS_PER_IMAGE):
+                        # if scores[idx] < 1e-4:
+                        #     continue
                         det_dict = OrderedDict()
                         det_dict["video_id"] = vid_id
                         det_dict["frame"] = int(file.split(".")[0])
                         det_dict["category_id"] = int(pred_classes[idx])
                         bbox = bboxes[idx].tensor[0].tolist()
-                        bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-                        bbox = [round(c, 5) for c in bbox]
+                        bbox = [
+                            round(bbox[1], 5),  # ymin
+                            round(bbox[0], 5),  # xmin
+                            round(bbox[3], 5),  # ymax
+                            round(bbox[2], 5),  # xmax
+                        ]
+                        if bbox[0] == bbox[2] or bbox[1] == bbox[3]:
+                            print(
+                                "Correcting bbox data for video {} and frame {}".format(
+                                    vid_id, int(file.split(".")[0])
+                                )
+                            )
+                            if bbox[0] == bbox[2]:
+                                if bbox[0] - shift_y >= 0:
+                                    bbox[0] -= shift_y
+                                else:
+                                    bbox[2] += shift_y
+                            if bbox[1] == bbox[3]:
+                                if bbox[1] - shift_x >= 0:
+                                    bbox[1] -= shift_x
+                                else:
+                                    bbox[3] += shift_x
+                        assert (
+                            bbox[0] < bbox[2] and bbox[1] < bbox[3]
+                        ), "Box data {} for video {} and frame {}  is invalid".format(
+                            bbox, vid_id, int(file.split(".")[0])
+                        )
                         det_dict["bbox"] = bbox
                         det_dict["score"] = float(scores[idx])
                         detections.append(det_dict)
@@ -102,10 +131,10 @@ def do_infer(cfg, args):
         results["results"] = detections
         if "s1" in ann_file:
             with open(os.path.join(cfg.OUTPUT_DIR, "seen.json"), "w") as f:
-                json.dump(results, f, indent=4)
+                json.dump(results, f)
         elif "s2" in ann_file:
             with open(os.path.join(cfg.OUTPUT_DIR, "unseen.json"), "w") as f:
-                json.dump(results, f, indent=4)
+                json.dump(results, f)
 
 
 def main(args):

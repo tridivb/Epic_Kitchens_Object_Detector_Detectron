@@ -109,3 +109,6 @@ venv.bak/
 .vscode/
 output/
 jobs/
+
+#local config
+*_local.yaml
