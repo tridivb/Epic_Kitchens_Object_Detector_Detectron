@@ -184,7 +184,11 @@ def setup(args):
 def main(args):
     cfg = setup(args)
 
-    register_dataset(args.root_dir, args.ann_dir)
+    if args.read_meta_cache:
+        read_cache = True
+    else:
+        read_cache = False
+    register_dataset(args.root_dir, args.ann_dir, read_cache=read_cache)
 
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
@@ -220,6 +224,7 @@ if __name__ == "__main__":
         default="",
         help="path to image files",
     )
+    parser.add_argument("--read-meta-cache", action="store_true", help="Read metadata from cache file")
     args = parser.parse_args()
     num_gpus = torch.cuda.device_count()
     if num_gpus == 0:
