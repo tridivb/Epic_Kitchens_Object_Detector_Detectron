@@ -33,11 +33,21 @@ def create_metadata(idx, row, root_dir):
     record["image_id"] = idx
 
     annotations = []
-    for bbox in row.bounding_boxes:
+    if "bounding_boxes" in row:
+        for bbox in row.bounding_boxes:
+            obj = {
+                "bbox": [bbox[1], bbox[0], bbox[3], bbox[2]],
+                "bbox_mode": BoxMode.XYWH_ABS,
+                "category_id": row.noun_class,
+                "iscrowd": 0,
+                "image_id": idx,
+            }
+            annotations.append(obj)
+    else:
         obj = {
-            "bbox": [bbox[1], bbox[0], bbox[3], bbox[2]],
+            "bbox": [-1, -1, -1, -1],
             "bbox_mode": BoxMode.XYWH_ABS,
-            "category_id": row.noun_class,
+            "category_id": -1,
             "iscrowd": 0,
             "image_id": idx,
         }
@@ -51,16 +61,45 @@ def get_epic_dicts(root_dir, annotation_file, dict_file=None):
     Helper function to get the list of metadata dictionaries for Object Annotations of Epic Kitchens dataset
     """
     if dict_file:
+        print(f"Metadata file found. Loading metadata from {dict_file}")
         with open(dict_file, "rb") as f:
             dataset_dicts = pickle.load(f)
     else:
-        annotations = pd.read_csv(annotation_file).sort_values(["video_id", "frame"])[0:1000]
-
-        annotations.bounding_boxes = annotations.bounding_boxes.apply(literal_eval)
-        dataset_dicts = Parallel(n_jobs=16)(
-            delayed(create_metadata)(idx, row, root_dir)
-            for idx, row in annotations.iterrows()
-        )
+        print(f"Creating metadata...")
+        if "test" in annotation_file:
+            annotations = pd.read_csv(annotation_file).sort_values(["video_id"])
+            p_id_list = []
+            vid_id_list = []
+            frames_list = []
+            for _, row in annotations.iterrows():
+                frames = os.listdir(
+                    os.path.join(root_dir, row.participant_id, row.video_id)
+                )
+                frames = sorted([int(x.split(".")[0]) for x in frames])
+                p_id_list.extend([row.participant_id] * len(frames))
+                vid_id_list.extend([row.video_id] * len(frames))
+                frames_list.extend(frames)
+            new_ann_dict = {
+                "video_id": vid_id_list,
+                "participant_id": p_id_list,
+                "frame": frames_list,
+            }
+            new_annotations = pd.DataFrame(
+                new_ann_dict, columns=["video_id", "participant_id", "frame"]
+            )
+            dataset_dicts = Parallel(n_jobs=16)(
+                delayed(create_metadata)(idx, row, root_dir)
+                for idx, row in new_annotations.iterrows()
+            )
+        else:
+            annotations = pd.read_csv(annotation_file).sort_values(
+                ["video_id", "frame"]
+            )
+            annotations.bounding_boxes = annotations.bounding_boxes.apply(literal_eval)
+            dataset_dicts = Parallel(n_jobs=16)(
+                delayed(create_metadata)(idx, row, root_dir)
+                for idx, row in annotations.iterrows()
+            )
 
         annotation_path = os.path.split(annotation_file)[0]
         metadata_file = (
@@ -70,10 +109,11 @@ def get_epic_dicts(root_dir, annotation_file, dict_file=None):
         with open(metadata_file, "wb") as f:
             pickle.dump(dataset_dicts, f)
         print(f"Metadata saved to {metadata_file}")
+        print("----------------------------------------------------------")
     return dataset_dicts
 
 
-def register_dataset(root_dir, ann_dir, read_cache=False):
+def register_dataset(root_dir, ann_dir, dataset_name, read_cache=False):
     """
     Helper function to register catalogue for Epic Kitchens Dataset in Detectron2 library
     """
@@ -82,31 +122,33 @@ def register_dataset(root_dir, ann_dir, read_cache=False):
     ).sort_values("noun_id")
     noun_classes = noun_classes.class_key.to_list()
 
-    print("Metadata being created...")
-    for d in ["train"]:
-        img_root = os.path.join(root_dir, d)
-        if d == "train":
-            ann_file = os.path.join(ann_dir, "EPIC_train_object_labels.csv")
-        metadata_file = ann_file.split(".")[0] + "_metadata.pkl"
-        if read_cache and os.path.exists(metadata_file):
-            print(f"Metadata file found. Loading metadata from {metadata_file}")
-            DatasetCatalog.register(
-                "epic_kitchens_" + d,
-                lambda d=d: get_epic_dicts(img_root, ann_file, dict_file=metadata_file),
-            )
-        else:
-            DatasetCatalog.register(
-                "epic_kitchens_" + d,
-                lambda d=d: get_epic_dicts(img_root, ann_file, dict_file=None),
-            )
+    if dataset_name == "epic_kitchens_train":
+        img_root = os.path.join(root_dir, "train")
+        ann_file = os.path.join(ann_dir, "EPIC_train_object_labels.csv")
+    elif dataset_name == "epic_kitchens_test_s1":
+        img_root = os.path.join(root_dir, "test")
+        ann_file = os.path.join(ann_dir, "EPIC_test_s1_object_video_list.csv")
+    elif dataset_name == "epic_kitchens_test_s2":
+        img_root = os.path.join(root_dir, "test")
+        ann_file = os.path.join(ann_dir, "EPIC_test_s2_object_video_list.csv")
+    metadata_file = ann_file.split(".")[0] + "_metadata.pkl"
+    if read_cache and os.path.exists(metadata_file):
+        DatasetCatalog.register(
+            dataset_name,
+            lambda d=dataset_name: get_epic_dicts(
+                img_root, ann_file, dict_file=metadata_file
+            ),
+        )
+    else:
+        DatasetCatalog.register(
+            dataset_name,
+            lambda d=dataset_name: get_epic_dicts(img_root, ann_file, dict_file=None),
+        )
 
-        MetadataCatalog.get("epic_kitchens_" + d).set(thing_classes=noun_classes)
-        MetadataCatalog.get("epic_kitchens_" + d).set(evaluator_type="coco")
-    print("Done")
-    print("----------------------------------------------------------")
-
-    metadata = MetadataCatalog.get("epic_kitchens_train")
-    return metadata
+    MetadataCatalog.get(dataset_name).set(thing_classes=noun_classes)
+    # TODO Create evaluator for epic kitchens
+    # MetadataCatalog.get("epic_kitchens_" + d).set(evaluator_type="coco")
+    print(f"Dataset {dataset_name} registered.")
 
 
 def visualize(root_dir, ann_dir):
