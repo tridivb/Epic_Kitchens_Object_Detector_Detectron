@@ -29,6 +29,7 @@ git clone https://github.com/tridivb/Epic_Kitchens_Object_Detector_Detectron.git
 3. [Pytorch](https://pytorch.org/get-started/locally/) >= 1.3
 4. [Detectron2](https://github.com/facebookresearch/detectron2)
 \
+\
 The object frames of the Epic Kitchens Dataset should be downloaded and the folder hierarchy should be in the following way, whis is also the
 default hierarchy of the dataset:
 
@@ -122,6 +123,8 @@ python infer_epic_kitchens.py --config-file config/<config_file>.yaml --root-dir
 \
 The script does not yet support running inference on a custom set of videos. However you can always modify the annotation files 
 `EPIC_test_s1_object_video_list.csv` and/or `EPIC_test_s2_object_video_list.csv` to specify which videos you want to infer for.
+\
+The feature extraction module is also not ready yet.
 
 ### Results
 
@@ -143,12 +146,12 @@ Please note, Detectron2 is licensed under Apache2.0. Please respect the original
 
 1.  ```
     @INPROCEEDINGS{Damen2018EPICKITCHENS,
-   title={Scaling Egocentric Vision: The EPIC-KITCHENS Dataset},
-   author={Damen, Dima and Doughty, Hazel and Farinella, Giovanni Maria  and Fidler, Sanja and 
-           Furnari, Antonino and Kazakos, Evangelos and Moltisanti, Davide and Munro, Jonathan 
-           and Perrett, Toby and Price, Will and Wray, Michael},
-   booktitle={European Conference on Computer Vision (ECCV)},
-   year={2018}
+    title={Scaling Egocentric Vision: The EPIC-KITCHENS Dataset},
+    author={Damen, Dima and Doughty, Hazel and Farinella, Giovanni Maria  and Fidler, Sanja and 
+            Furnari, Antonino and Kazakos, Evangelos and Moltisanti, Davide and Munro, Jonathan 
+            and Perrett, Toby and Price, Will and Wray, Michael},
+    booktitle={European Conference on Computer Vision (ECCV)},
+    year={2018}
     } 
     ```
 2. [Detectron2](https://github.com/facebookresearch/detectron2)
