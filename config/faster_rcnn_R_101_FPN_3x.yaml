@@ -9,7 +9,7 @@ MODEL:
     IN_FEATURES: ["res2", "res3", "res4", "res5"]
   ANCHOR_GENERATOR:
     SIZES: [[32], [64], [128], [256], [512]] # One size for each in feature map
-    ASPECT_RATIOS: [[0.5, 1.0, 2.0]] # Three aspect ratios (same for all in feature maps)
+    ASPECT_RATIOS: [[0.25, 0.5, 1.0, 2.0]] # Three aspect ratios (same for all in feature maps)
   RPN:
     IN_FEATURES: ["p2", "p3", "p4", "p5", "p6"]
     PRE_NMS_TOPK_TRAIN: 2000 # Per FPN level
@@ -24,38 +24,38 @@ MODEL:
     IN_FEATURES: ["p2", "p3", "p4", "p5"]
     NUM_CLASSES: 352
     BATCH_SIZE_PER_IMAGE: 512
-    SCORE_THRESH_TEST: 0.0
+    SCORE_THRESH_TEST: 0.0001
   ROI_BOX_HEAD:
     NAME: "FastRCNNConvFCHead"
     NUM_FC: 2
     POOLER_RESOLUTION: 7
-  # WEIGHTS: "detectron2://COCO-Detection/faster_rcnn_R_101_FPN_3x/137851257/model_final_f6e8b1.pkl"
-  WEIGHTS: "/media/data/tridiv/epic/tridiv/epic/obj_log/model_0099847.pth"
+  WEIGHTS: "detectron2://COCO-Detection/faster_rcnn_R_101_FPN_3x/137851257/model_final_f6e8b1.pkl"
+  # WEIGHTS: "./obj_log/model_final.pth"
   MASK_ON: False
 DATASETS:
   TRAIN: ("epic_kitchens_train",)
-  TEST: ("epic_kitchens_train",)
+  TEST: ("epic_kitchens_test_s1", "epic_kitchens_test_s2",)
 DATALOADER:
-  NUM_WORKERS: 8
+  NUM_WORKERS: 10
 SOLVER:
   # Calculate no of iterations based on this batch size
-  IMS_PER_BATCH: 6
-  BASE_LR: 0.005
+  IMS_PER_BATCH: 18
+  BASE_LR: 0.0003
   GAMMA: 0.1
-  # (0, 2.25, 3.03) epochs approx
-  STEPS: (0, 112329, 151269)
-  # 3.37 epochs approx
-  MAX_ITER: 168243
+  # (7.388) epochs approx
+  STEPS: (479984,)
+  # 9.851 epochs approx
+  MAX_ITER: 640000
   WEIGHT_DECAY: 0.0001
   # Set this to save checkpoint every epoch (approx)
-  CHECKPOINT_PERIOD: 49924
+  CHECKPOINT_PERIOD: 64968
 INPUT:
   MIN_SIZE_TRAIN: (800,)
   MAX_SIZE_TRAIN: 1333
   MIN_SIZE_TEST: 800
   MAX_SIZE_TEST: 1333
 TEST:
-  DETECTIONS_PER_IMAGE: 300
+  DETECTIONS_PER_IMAGE: 125
 VERSION: 2
-OUTPUT_DIR: "/media/data/tridiv/epic/obj_log"
+OUTPUT_DIR: "./obj_log"
 CUDNN_BENCHMARK: True

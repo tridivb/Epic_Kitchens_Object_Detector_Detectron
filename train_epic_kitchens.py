@@ -188,7 +188,7 @@ def main(args):
         read_cache = True
     else:
         read_cache = False
-    register_dataset(args.root_dir, args.ann_dir, read_cache=read_cache)
+    register_dataset(args.root_dir, args.ann_dir, cfg.DATASETS.TRAIN[0], read_cache=read_cache)
 
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
