@@ -43,7 +43,7 @@ from detectron2.utils.events import (
     TensorboardXWriter,
 )
 
-from utils.register import register_dataset
+from core.utils import register_dataset
 
 logger = logging.getLogger("detectron2")
 
@@ -89,7 +89,7 @@ def do_test(cfg, model):
     return results
 
 
-def do_train(cfg, model, resume=False):
+def do_train(cfg, args, model, resume=False, read_cache=False):
     model.train()
     optimizer = build_optimizer(cfg, model)
     scheduler = build_lr_scheduler(cfg, optimizer)
@@ -118,6 +118,8 @@ def do_train(cfg, model, resume=False):
         if comm.is_main_process()
         else []
     )
+
+    register_dataset(args.root_dir, args.ann_dir, cfg.DATASETS.TRAIN[0], read_cache=read_cache)
 
     # compared to "train_net.py", we do not support accurate timing and
     # precise BN here, because they are not trivial to implement
@@ -188,7 +190,6 @@ def main(args):
         read_cache = True
     else:
         read_cache = False
-    register_dataset(args.root_dir, args.ann_dir, cfg.DATASETS.TRAIN[0], read_cache=read_cache)
 
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
@@ -204,7 +205,7 @@ def main(args):
             model, device_ids=[comm.get_local_rank()], broadcast_buffers=False
         )
 
-    do_train(cfg, model)
+    do_train(cfg, args, model, read_cache)
     # return do_test(cfg, model)
 
 

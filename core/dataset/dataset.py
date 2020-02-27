@@ -6,10 +6,10 @@ from torch.utils.data import Dataset
 class Test_Dataset(Dataset):
     def __init__(self):
         super(Test_Dataset, self).__init__()
-        pass
+        raise Exception("Not implemented")
 
     def __len__(self):
-        pass
+        raise Exception("Not implemented")
 
     def __getitem__(self, index):
-        pass
+        raise Exception("Not implemented")

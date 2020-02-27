@@ -123,14 +123,32 @@ def register_dataset(root_dir, ann_dir, dataset_name, read_cache=False):
     noun_classes = noun_classes.class_key.to_list()
 
     if dataset_name == "epic_kitchens_train":
-        img_root = os.path.join(root_dir, "train")
-        ann_file = os.path.join(ann_dir, "EPIC_train_object_labels.csv")
+        img_dir_name = "train"
+        ann_file_name = "EPIC_train_object_labels.csv"
+    elif dataset_name == "epic_kitchens_train_split1":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_train_object_labels_split1.csv"
+    elif dataset_name == "epic_kitchens_train_split2":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_train_object_labels_split2.csv"
+    elif dataset_name == "epic_kitchens_train_split3":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_train_object_labels_split3.csv"
+    elif dataset_name == "epic_kitchens_train_split4":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_train_object_labels_split4.csv"
+    elif dataset_name == "epic_kitchens_train_split5":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_train_object_labels_split5.csv"
     elif dataset_name == "epic_kitchens_test_s1":
-        img_root = os.path.join(root_dir, "test")
-        ann_file = os.path.join(ann_dir, "EPIC_test_s1_object_video_list.csv")
+        img_dir_name = "test"
+        ann_file_name = "EPIC_test_s1_object_video_list.csv"
     elif dataset_name == "epic_kitchens_test_s2":
-        img_root = os.path.join(root_dir, "test")
-        ann_file = os.path.join(ann_dir, "EPIC_test_s2_object_video_list.csv")
+        img_dir_name = "test"
+        ann_file_name = "EPIC_test_s2_object_video_list.csv"
+
+    img_root = os.path.join(root_dir, img_dir_name)
+    ann_file = os.path.join(ann_dir, ann_file_name)
     metadata_file = ann_file.split(".")[0] + "_metadata.pkl"
     if read_cache and os.path.exists(metadata_file):
         DatasetCatalog.register(

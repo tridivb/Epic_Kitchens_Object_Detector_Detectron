@@ -22,7 +22,7 @@ from detectron2.checkpoint import DetectionCheckpointer
 from dataset.dataloader import build_detection_test_loader
 from detectron2.modeling import build_model
 
-from utils.register import register_dataset
+from core.utils import register_dataset
 
 logger = logging.getLogger("detectron2")
 
