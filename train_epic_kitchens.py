@@ -119,8 +119,6 @@ def do_train(cfg, args, model, resume=False, read_cache=False):
         else []
     )
 
-    register_dataset(args.root_dir, args.ann_dir, cfg.DATASETS.TRAIN[0], read_cache=read_cache)
-
     # compared to "train_net.py", we do not support accurate timing and
     # precise BN here, because they are not trivial to implement
     logger.info("Dataset creation in progress...")
@@ -190,6 +188,8 @@ def main(args):
         read_cache = True
     else:
         read_cache = False
+
+    register_dataset(args.root_dir, args.ann_dir, cfg.DATASETS.TRAIN[0], read_cache=read_cache)
 
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
