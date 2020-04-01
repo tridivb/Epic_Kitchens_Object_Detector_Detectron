@@ -122,6 +122,7 @@ def register_dataset(root_dir, ann_dir, dataset_name, read_cache=False):
     ).sort_values("noun_id")
     noun_classes = noun_classes.class_key.to_list()
 
+    # Hacky if else logic
     if dataset_name == "epic_kitchens_train":
         img_dir_name = "train"
         ann_file_name = "EPIC_train_object_labels.csv"
@@ -140,6 +141,21 @@ def register_dataset(root_dir, ann_dir, dataset_name, read_cache=False):
     elif dataset_name == "epic_kitchens_train_split5":
         img_dir_name = "train"
         ann_file_name = "EPIC_train_object_labels_split5.csv"
+    elif dataset_name == "epic_kitchens_val_split1":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_val_object_labels_split1.csv"
+    elif dataset_name == "epic_kitchens_val_split2":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_val_object_labels_split2.csv"
+    elif dataset_name == "epic_kitchens_val_split3":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_val_object_labels_split3.csv"
+    elif dataset_name == "epic_kitchens_val_split4":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_val_object_labels_split4.csv"
+    elif dataset_name == "epic_kitchens_val_split5":
+        img_dir_name = "train"
+        ann_file_name = "EPIC_val_object_labels_split5.csv"
     elif dataset_name == "epic_kitchens_test_s1":
         img_dir_name = "test"
         ann_file_name = "EPIC_test_s1_object_video_list.csv"
@@ -165,7 +181,9 @@ def register_dataset(root_dir, ann_dir, dataset_name, read_cache=False):
 
     MetadataCatalog.get(dataset_name).set(thing_classes=noun_classes)
     # TODO Create evaluator for epic kitchens
-    # MetadataCatalog.get("epic_kitchens_" + d).set(evaluator_type="coco")
+    MetadataCatalog.get(dataset_name).set(evaluator_type="pascalvoc")
+    MetadataCatalog.get(dataset_name).set(dirname=ann_dir)
+    MetadataCatalog.get(dataset_name).set(file=ann_file_name)
     print(f"Dataset {dataset_name} registered.")
 
 

@@ -19,9 +19,9 @@ from detectron2.engine import (
     DefaultPredictor,
 )
 from detectron2.checkpoint import DetectionCheckpointer
-from dataset.dataloader import build_detection_test_loader
 from detectron2.modeling import build_model
 
+from core.dataset import build_detection_test_loader
 from core.utils import register_dataset
 
 logger = logging.getLogger("detectron2")
@@ -116,14 +116,13 @@ def do_infer(cfg, args, model):
         results["results"] = detections
         if dataset_name == "epic_kitchens_test_s1":
             json_file = os.path.join(cfg.OUTPUT_DIR, "seen.json")
-            with open(json_file, "w") as f:
-                json.dump(results, f)
-            logger.info(f"Results for {dataset_name} saved to {json_file}")
         elif dataset_name == "epic_kitchens_test_s2":
             json_file = os.path.join(cfg.OUTPUT_DIR, "unseen.json")
-            with open(json_file, "w") as f:
-                json.dump(results, f)
-            logger.info(f"Results for {dataset_name} saved to {json_file}")
+        else:
+            json_file = os.path.join(cfg.OUTPUT_DIR, f"results_{dataset_name}.json")
+        with open(json_file, "w") as f:
+            json.dump(results, f)
+        logger.info(f"Results for {dataset_name} saved to {json_file}")
 
 
 def main(args):

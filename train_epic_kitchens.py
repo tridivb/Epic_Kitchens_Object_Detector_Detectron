@@ -29,7 +29,7 @@ from detectron2.data import (
 )
 from detectron2.engine import default_argument_parser, default_setup, launch
 from detectron2.evaluation import (
-    COCOEvaluator,
+    PascalVOCDetectionEvaluator,
     DatasetEvaluators,
     inference_on_dataset,
     print_csv_format,
@@ -59,7 +59,7 @@ def get_evaluator(cfg, dataset_name, output_folder=None):
         output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
     evaluator_list = []
     evaluator_type = MetadataCatalog.get(dataset_name).evaluator_type
-    evaluator_list.append(COCOEvaluator(dataset_name, cfg, True, output_folder))
+    evaluator_list.append(PascalVOCDetectionEvaluator(dataset_name))
 
     if len(evaluator_list) == 0:
         raise NotImplementedError(
@@ -72,9 +72,10 @@ def get_evaluator(cfg, dataset_name, output_folder=None):
     return DatasetEvaluators(evaluator_list)
 
 
-def do_test(cfg, model):
+def do_test(cfg, args, model, read_cache=False):
     results = OrderedDict()
     for dataset_name in cfg.DATASETS.TEST:
+        register_dataset(args.root_dir, args.ann_dir, dataset_name, read_cache=read_cache)
         data_loader = build_detection_test_loader(cfg, dataset_name)
         evaluator = get_evaluator(
             cfg, dataset_name, os.path.join(cfg.OUTPUT_DIR, "inference", dataset_name)
@@ -122,6 +123,7 @@ def do_train(cfg, args, model, resume=False, read_cache=False):
     # compared to "train_net.py", we do not support accurate timing and
     # precise BN here, because they are not trivial to implement
     logger.info("Dataset creation in progress...")
+    register_dataset(args.root_dir, args.ann_dir, cfg.DATASETS.TRAIN[0], read_cache=read_cache)
     data_loader = build_detection_train_loader(cfg)
     logger.info("Done")
     logger.info("----------------------------------------------------------")
@@ -189,15 +191,13 @@ def main(args):
     else:
         read_cache = False
 
-    register_dataset(args.root_dir, args.ann_dir, cfg.DATASETS.TRAIN[0], read_cache=read_cache)
-
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
     if args.eval_only:
         DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
         )
-        return do_test(cfg, model)
+        return do_test(cfg, args, model, read_cache)
 
     distributed = comm.get_world_size() > 1
     if distributed:
