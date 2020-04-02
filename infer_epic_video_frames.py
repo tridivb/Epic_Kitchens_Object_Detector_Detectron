@@ -8,7 +8,8 @@ import torch
 import pickle
 import numpy as np
 from tqdm import tqdm
-import ffmpeg
+import moviepy.editor as mpe
+from collections import OrderedDict
 
 import detectron2.utils.comm as comm
 from detectron2.config import get_cfg
@@ -55,6 +56,7 @@ def format_detections(frame_no, height, width, output):
         if bbox[0] == bbox[2] or bbox[1] == bbox[3]:
             continue
 
+        # format: [class, score, ymin, xmin, ymax, xmax]
         det = np.zeros((6))
         # det[0] = frame_no
         det[0] = pred_classes[idx]
@@ -62,7 +64,7 @@ def format_detections(frame_no, height, width, output):
         det[2:] = np.array(bbox)
         detections.append(det)
 
-    return np.stack(detections)
+    return detections
 
 
 def do_infer(cfg, args):
@@ -76,46 +78,50 @@ def do_infer(cfg, args):
     logger.info(
         "-------------------------------------------------------------------------"
     )
+    rejected_dict = OrderedDict()
     for vid_id in inference_data.keys():
         time_frames = inference_data[vid_id]
         vid_file = os.path.join(args.vid_dir, f"{vid_id}.MP4")
-        probe = ffmpeg.probe(vid_file)
-        video_stream = next(
-            (stream for stream in probe["streams"] if stream["codec_type"] == "video"),
-            None,
-        )
-        width = int(video_stream["width"])
-        height = int(video_stream["height"])
-        fps = video_stream["avg_frame_rate"].split("/")
-        fps = round(float(fps[0]) / float(fps[1]), 2)
         inference_out_dir = os.path.join(cfg.OUTPUT_DIR, vid_id)
         os.makedirs(inference_out_dir, exist_ok=True)
-        logger.info(f"Processing {vid_id}. Output will be saved to {inference_out_dir}")
+        logger.info(
+            f"Processing {vid_id}. Output will be saved to {inference_out_dir}/"
+        )
+        video = mpe.VideoFileClip(vid_file, audio=False, fps_source="tbr")
+        start_frame = video.get_frame(0)
+        height, width = start_frame.shape[0:2]
+        rejected = []
         for offset in tqdm(time_frames):
             offset = float(offset)
+            frame_no = int(video.fps * offset)
             if offset > 0:
-                frame_no = int(fps * offset)
-                buffer, _ = (
-                    ffmpeg.input(vid_file)
-                    .filter("select", "gte(n,{})".format(frame_no))
-                    .output(
-                        "pipe:",
-                        format="rawvideo",
-                        pix_fmt="rgb24",
-                        vframes=1,
-                        loglevel="quiet",
-                    )
-                    .run(capture_stdout=True)
-                )
-                frame = np.frombuffer(buffer, np.uint8).reshape([height, width, 3])
+                frame = video.get_frame(offset)
                 out = predictor(frame)
                 detections = format_detections(frame_no, height, width, out)
-                out_file = os.path.join(inference_out_dir, f"offset_{offset}.npy")
-                np.save(out_file, detections)
+                if len(detections) > 0:
+                    detections = np.stack(detections)
+                    out_file = os.path.join(inference_out_dir, f"offset_{offset}.npy")
+                    np.save(out_file, detections)
+                else:
+                    rejected.append(offset)
+                rejected.append(0.00)
+                break
+        video.close()
+        if len(rejected) > 0:
+            rejected_dict[vid_id] = rejected
+            logger.warning(f"Rejected offsets:{rejected}")
         logger.info("Done")
         logger.info(
             "-------------------------------------------------------------------------"
         )
+        break
+
+    if len(rejected_dict.keys()) > 0:
+        rejected_file = os.path.split(args.vid_anns)[1]
+        rejected_file = os.path.join(cfg.OUTPUT_DIR, f"rejected_{rejected_file}")
+        with open(rejected_file, "wb") as f:
+            pickle.dump(rejected_dict, f)
+        logger.info(f"List of rejected frames saved to {rejected_file}")
 
 
 def main(args):
