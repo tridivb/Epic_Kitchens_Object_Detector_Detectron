@@ -104,8 +104,6 @@ def do_infer(cfg, args):
                     np.save(out_file, detections)
                 else:
                     rejected.append(offset)
-                rejected.append(0.00)
-                break
         video.close()
         if len(rejected) > 0:
             rejected_dict[vid_id] = rejected
@@ -114,7 +112,6 @@ def do_infer(cfg, args):
         logger.info(
             "-------------------------------------------------------------------------"
         )
-        break
 
     if len(rejected_dict.keys()) > 0:
         rejected_file = os.path.split(args.vid_anns)[1]
@@ -122,6 +119,8 @@ def do_infer(cfg, args):
         with open(rejected_file, "wb") as f:
             pickle.dump(rejected_dict, f)
         logger.info(f"List of rejected frames saved to {rejected_file}")
+    else:
+        logger.info("No frames rejected")
 
 
 def main(args):
