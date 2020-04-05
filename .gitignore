@@ -111,4 +111,4 @@ output/
 jobs/
 
 #local config
-*_local.yaml
+*_local*.yaml
