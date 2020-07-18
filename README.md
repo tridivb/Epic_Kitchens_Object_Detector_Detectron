@@ -1,18 +1,12 @@
-# Epic Kitchens Object Detector and Feature Extractor with Detectron
+# Epic Kitchens Object Detector with Detectron2
 
-WIP for Detectron2 and Python3. For the previous working version using python2 and detectron (of the object feature extractor only), refer to the [python2](https://github.com/tridivb/Epic_Kitchens_Feature_Extractor_Detectron/tree/python2) branch.
+For the previous working version using python2 and detectron (of the object feature extractor only), refer to the [python2](https://github.com/tridivb/Epic_Kitchens_Feature_Extractor_Detectron/tree/python2) branch.
 
 Detect Objects in the Epic Kitchens dataset using Faster-RCNN as the backbone and the Detectron library.
 
-Once the updates are up, the python2 version will be deprecated.
+The python2 version is deprecated.
 
-## TODO
-1. Implement batch and multi-gpu processing in inference script. --Done
-2. Create pascal-voc evaluator for Epic Kitchens -- In Progress
-3. Implement tester/inference script with detectron2 and python3. --Done
-4. Provide conda environment file or requirements file to setup python environment. -- Done
-5. Modify docker scripts to accomodate updated versions of python and detectron (Currently not working)
-6. Create the feature extractor module with detectron2
+Update: I stopped working on the feature extraction module for this project.
 
 ## Getting Started
 
