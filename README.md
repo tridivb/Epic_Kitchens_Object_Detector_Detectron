@@ -105,7 +105,7 @@ python train_epic_kitchens.py --help
 
 The script does not yet support custom training and validation.
 
-### Extracting the features and detections
+### Inference
 
 The script `infer_epic_kitchens.sh` is provided to run the inference on the test object frames of Epic Kitchens. To run the inference, simply run
 this script as follows:
